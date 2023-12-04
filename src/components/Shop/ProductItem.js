@@ -1,19 +1,51 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Card from "../UI/Card";
 import styles from "./ProductItem.module.css";
 import { cartActions } from "../../store/cart-slice";
 
 const ProductItem = (props) => {
-  const dispatch = useDispatch();
+  const cart = useSelector((state) => state.cart);
 
+  const dispatch = useDispatch();
   const { id, title, price, description } = props;
 
   const addItemHandler = () => {
-    dispatch(cartActions.addItem({
-      id,
-      title,
-      price
-    }));
+    const updatedItemsQuantity = cart.itemsQuantity + 1;
+
+    const updatedItems = cart.items.slice();
+    const existingItem = updatedItems.find((item) => item.id === id);
+
+    if (existingItem) {
+      const updatedExistingItem = {...existingItem};
+      updatedExistingItem.quantity++;
+      updatedExistingItem.totalPrice = updatedExistingItem.totalPrice + price;
+
+      const existingItemIndex = updatedItems.findIndex(
+        (item) => item.id === id
+      );
+      updatedItems[existingItemIndex] = updatedExistingItem;
+    } else {
+      updatedItems.push({
+        id,
+        price,
+        quantity: 1,
+        totalPrice: price,
+        title
+      });
+    }
+
+    const updatedCart = {
+      itemsQuantity: updatedItemsQuantity,
+      items: updatedItems
+    }
+
+    dispatch(cartActions.updateCart(updatedCart));
+
+    // dispatch(cartActions.addItem({
+    //   id,
+    //   title,
+    //   price
+    // }));
   };
 
   return (
