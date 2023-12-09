@@ -3,7 +3,8 @@ import { mainActions } from './main-slice';
 
 const initialState = {
   items: [],
-  itemsQuantity: 0
+  itemsQuantity: 0,
+  isCartContentChanged: false,
 }
 
 const cartSlice = createSlice({
@@ -11,9 +12,11 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addItem(state, action) {
+      console.log(state)
       const newItem = action.payload;
-      const existingItem = state.items.find(item => item.id === newItem.id);
+      const existingItem = state.items.find((item) => item.id === newItem.id);
       state.itemsQuantity++;
+      state.isCartContentChanged = true;
       if (!existingItem) {
         state.items.push({
           id: newItem.id,
@@ -31,6 +34,7 @@ const cartSlice = createSlice({
       const id = action.payload;
       const existingItem = state.items.find(item => item.id === id);
       state.itemsQuantity--;
+      state.isCartContentChanged = true;
       if (existingItem.quantity === 1) {
         state.items = state.items.filter(item => item.id !== id);
       } else {
@@ -38,10 +42,10 @@ const cartSlice = createSlice({
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
       }
     },
-    // updateCart(state, action) {
-    //   state.items = action.payload.items;
-    //   state.itemsQuantity = action.payload.itemsQuantity;
-    // }
+    updateCart(state, action) {
+      state.items = action.payload.items;
+      state.itemsQuantity = action.payload.itemsQuantity;
+    }
   }
 });
 
@@ -54,12 +58,12 @@ export const sendCartData = (cartData) => {
       })
     );
 
-    const sendHttpRequest = async () => {
+    const sendDataHttpRequest = async () => {
       const response = await fetch(
         'https://react-course-http-a4f50-default-rtdb.firebaseio.com/cart.json',
           {
             method: 'PUT',
-            body: JSON.stringify(cartData),
+            body: JSON.stringify({items: cartData.items, itemsQuantity: cartData.itemsQuantity}),
           }
       );
   
@@ -68,10 +72,8 @@ export const sendCartData = (cartData) => {
       }
     };
 
-    
-
     try {
-      await sendHttpRequest();
+      await sendDataHttpRequest();
 
       dispatchAction(
         mainActions.showStatusMessage({
@@ -93,5 +95,37 @@ export const sendCartData = (cartData) => {
 }
 
 export const cartActions = cartSlice.actions;
+
+export const getCartData = () => {
+  return async (dispatchAction) => {
+    const getDataHttpRequst = async () => {
+      const response = await fetch('https://react-course-http-a4f50-default-rtdb.firebaseio.com/cart.json');
+
+      if (!response.ok) {
+        throw new Error('Can`t get data!')
+      }
+
+      const responseData = await response.json();
+
+      return responseData;
+    }
+
+    try {
+      const cartData = await getDataHttpRequst();
+      dispatchAction(cartActions.updateCart({
+        item: cartData.items || [],
+        itemsQuantity: cartData.itemsQuantity
+      }));
+    } catch (error) {
+      dispatchAction(
+        mainActions.showStatusMessage({
+          status: 'error',
+          title: 'Error',
+          message: 'Cart data getting error!'
+        })
+      );
+    }
+  };
+};
 
 export default cartSlice;

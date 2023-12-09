@@ -4,7 +4,7 @@ import Layout from './components/Layout/Layout';
 import Products from './components/Shop/Products';
 import { useSelector, useDispatch } from 'react-redux';
 import StatusBarMessage from './components/UI/StatusBarMessage';
-import { sendCartData } from './store/cart-slice';
+import { getCartData, sendCartData } from './store/cart-slice';
 
 let isInitialRunning = true;
 
@@ -16,12 +16,18 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(getCartData());
+  }, []);
+
+  useEffect(() => {
     if (isInitialRunning) {
       isInitialRunning = false;
       return;
     }
 
-    dispatch(sendCartData(cart));
+    if (cart.isCartContentChanged) {
+      dispatch(sendCartData(cart));
+    }
   }, [cart]);
 
   return (
