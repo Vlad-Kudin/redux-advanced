@@ -37,10 +37,10 @@ const cartSlice = createSlice({
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
       }
     },
-    updateCart(state, action) {
-      state.items = action.payload.items;
-      state.itemsQuantity = action.payload.itemsQuantity;
-    }
+    // updateCart(state, action) {
+    //   state.items = action.payload.items;
+    //   state.itemsQuantity = action.payload.itemsQuantity;
+    // }
   }
 });
 
