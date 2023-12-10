@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { mainActions } from './main-slice';
 
 const initialState = {
   items: [],
@@ -43,6 +44,53 @@ const cartSlice = createSlice({
     // }
   }
 });
+
+export const sendCartData = (cartData) => {
+  return async (dispatchAction) => {
+    dispatchAction(mainActions.showStatusMessage({
+        status: 'pending',
+        title: 'Sending',
+        message: 'Cart data sending...'
+      })
+    );
+
+    const sendHttpRequest = async () => {
+      const response = await fetch(
+        'https://react-course-http-a4f50-default-rtdb.firebaseio.com/cart.json',
+          {
+            method: 'PUT',
+            body: JSON.stringify(cartData),
+          }
+      );
+  
+      if (!response.ok) {
+        throw new Error('Sending cart error!')
+      }
+    };
+
+    
+
+    try {
+      await sendHttpRequest();
+
+      dispatchAction(
+        mainActions.showStatusMessage({
+          status: 'succuss',
+          title: 'Completed',
+          message: 'Cart data sended succussful!'
+        })
+      );
+    } catch (error) {
+      dispatchAction(
+        mainActions.showStatusMessage({
+          status: 'error',
+          title: 'Error',
+          message: 'Cart data sending error!'
+        })
+      );
+    }
+  }
+}
 
 export const cartActions = cartSlice.actions;
 
